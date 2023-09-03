@@ -13,7 +13,7 @@ To use Gitr, follow these steps:
 #### Clone this repo
 
 ```bash
- $ git clone https://github.com/yourusername/gitr.git
+ $ git clone https://github.com/satoc0/gitr.git
 ```
 
 Navigate to the cloned repository's directory and build the **gitr** executable using Cargo.
