@@ -6,17 +6,22 @@ pub mod config;
 pub mod executor;
 
 fn main() {
+    match config::ConfigManager::start() {
+        Ok(manager) => {
+            let mut runtime: executor::Runtime = executor::Runtime::create(manager);
 
-    let manager = config::ConfigManager::start().unwrap();
-    let mut runtime = executor::Runtime::create(manager);
-
-    match runtime.start() {
-        Ok(_) => {
-            exit(0)
-        },
-        Err(err) => {
-            println!("{}", err);
-            exit(1);
-        },
+            match runtime.start() {
+                Ok(_) => {
+                    exit(0)
+                },
+                Err(err) => {
+                    println!("{}", err);
+                    exit(1);
+                },
+            }
+        }
+        Err(err) => { println!("{}", err) }
     }
+
+    
 }
