@@ -13,14 +13,13 @@ To use Gitr, follow these steps:
 #### Clone this repo
 
 ```bash
- $ git clone https://github.com/satoc0/gitr.git
+git clone https://github.com/satoc0/gitr.git
 ```
 
 Navigate to the cloned repository's directory and build the **gitr** executable using Cargo.
 
 ```bash
- $ cd gitr
- $ cargo build --release
+cargo build --release
 ```
 
 #### Set Execution Permissions
@@ -42,7 +41,7 @@ Now, Gitr is ready to use on your system. You can run **gitr** commands from any
 ## Usage
 Goto parent folder that has the repositories and start **gitr**:
 ```bash
- $ gitr
+gitr
 ```
 
 On the first run, **gitr** will prompt you to mark the repositories you want to include in its operations.
