@@ -51,7 +51,7 @@ On the first run, **gitr** will prompt you to mark the repositories you want to 
 In **gitr**, you have access to all standard Git commands, in addition to some helpful gitr-specific functionalities:
 
  - `clear`: the terminal;
- - `branches`: Use the branches command to configure the repositories you want **gitr** to work with. This command allows you to set up and manage your environment, specifying which repositories gitr should consider in its operations.
+ - `repos`: Use the repos command to configure the repositories you want **gitr** to work with. This command allows you to set up and manage your environment, specifying which repositories gitr should consider in its operations.
 
 ## Contributing
 
