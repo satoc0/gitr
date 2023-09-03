@@ -61,7 +61,7 @@ impl Runtime {
     pub fn create(config: ConfigManager) -> Runtime {
         let current_branch: &Vec<GitDirectoryInfo> = &config.get_config().workable_paths;
 
-        let status_hash_map: HashMap<String, CommandStatus> = current_branch
+        let current_cmd_status: HashMap<String, CommandStatus> = current_branch
             .iter()
             .map(|git_dic| {
                 let status = CommandStatus {
@@ -72,7 +72,10 @@ impl Runtime {
             })
             .collect();
 
-        let runtime = Runtime { config, current_cmd_status: status_hash_map };
+        let runtime = Runtime {
+            config,
+            current_cmd_status,
+        };
 
         return runtime;
     }
@@ -90,12 +93,13 @@ impl Runtime {
             let readline: Result<String, ReadlineError> = rl.readline(read_line_prompt.as_str());
             match readline {
                 Ok(line) => {
-                    let line_str = line.as_str();
-                    rl.add_history_entry(line_str).unwrap();
+                    let line_parsed = self.replace_variables(&line);
 
-                    self.parse_line(line_str);
+                    rl.add_history_entry(line.as_str()).expect("Failed to add command to history");
 
-                    rl.save_history(GIT_HISTORY_FILE_NAME).unwrap();
+                    self.parse_line(&line_parsed);
+
+                    rl.save_history(GIT_HISTORY_FILE_NAME).expect("Failed to save command to history file")
                 }
                 Err(ReadlineError::Interrupted) => {
                     println!("Exit");
@@ -113,6 +117,16 @@ impl Runtime {
         }
 
         Ok(())
+    }
+
+    fn replace_variables(&self, line_raw: &String) -> String {
+        let config: &Config = self.config.get_config();
+        let branchs: &Vec<GitDirectoryInfo> = &config.workable_paths;
+        let first_git_dic = &branchs[0].path;
+
+        let branch_name = get_branch_name(first_git_dic);
+
+        line_raw.replace("$$branch", branch_name.as_str())
     }
 
     fn get_promp(&self) -> String {
@@ -138,14 +152,7 @@ impl Runtime {
         let config: &Config = self.config.get_config();
         let branchs: &Vec<GitDirectoryInfo> = &config.workable_paths;
         let first_git_dic = &branchs[0].path;
-        
-        let output = Command::new("git")
-            .current_dir(&first_git_dic)
-            .args(["rev-parse", "--abbrev-ref", "HEAD"])
-            .output().expect("Error");
-
-        let output_str_vec = if output.status.success() { output.stdout } else { output.stderr };
-        let current_branch = String::from_utf8_lossy(&output_str_vec).to_string();
+        let current_branch = get_branch_name(first_git_dic);
 
         let mut prompt_str: String = String::from("");
 
@@ -183,7 +190,7 @@ impl Runtime {
         prompt_str
     }
 
-    fn parse_line(&mut self, line: &str) {
+    fn parse_line(&mut self, line: &String) {
         if line.len() == 0 {
             println!("Type some command");
             return
@@ -197,10 +204,10 @@ impl Runtime {
             return
         }
 
-        if command == "branches" {
+        if command == "repos" {
             let config: &Config = self.config.get_config();
             let branchs: &Vec<GitDirectoryInfo> = &config.workable_paths;
-            match ConfigManager::init_first_config(branchs.clone()) {
+            match ConfigManager::config_workable_repos(branchs.clone()) {
                 Ok(config) => {
                     self.config.config = config;
                 }
@@ -309,10 +316,8 @@ impl Runtime {
     }
 
     fn execute_command(git_dic: &GitDirectoryInfo, args: Vec<String>) -> Result<String, String> {
-        let exec = Command::new("git")
-            .current_dir(&git_dic.path)
-            .args(args)
-            .output();
+        let args: Vec<&str> = args.iter().map( |v| v.as_str() ).collect();
+        let exec = run_git_cmd(&git_dic.path, args);
 
         match exec {
             Ok(output) => {
@@ -347,12 +352,32 @@ fn get_error_cmd_status(output: String) -> CommandStatus {
     }
 }
 
-fn get_branch_name(path: &String) -> String {
-    let output = Command::new("git")
-        .current_dir(path)
-        .args(["rev-parse", "--abbrev-ref", "HEAD"])
-        .output().expect("Error");
+fn run_git_cmd(path: &String, args: Vec<&str>) -> Result<std::process::Output, std::io::Error> {
+    run_cmd(path, "git", args)
+}
 
-    let output_str_vec = if output.status.success() { output.stdout } else { output.stderr };
-    String::from_utf8_lossy(&output_str_vec).to_string()
+fn run_cmd(path: &String, cmd: &str, args: Vec<&str>) -> Result<std::process::Output, std::io::Error> {
+    Command::new(cmd)
+        .current_dir(path)
+        .args(args)
+        .output()
+}
+
+fn get_branch_name(path: &String) -> String {
+    let output_result = run_git_cmd(path, vec!["branch", "--show-current"])
+        .or(run_git_cmd(path, vec!["rev-parse", "--abbrev-ref", "HEAD"]))
+        .or(run_git_cmd(path, vec!["symbolic-ref", "--short", "HEAD"]));
+
+    match output_result {
+        Ok(output) => {
+             if output.status.success() {
+                String::from_utf8_lossy(&output.stdout).to_string()
+            } else {
+                String::from_utf8_lossy(&output.stderr).to_string()
+            }
+        },
+        Err(err) => {
+            err.to_string()
+        }
+    }
 }
