@@ -24,7 +24,6 @@ pub struct ConfigManager<> {
 
 impl ConfigManager<> {
     pub fn start() -> Result<ConfigManager, &'static str> {
-        // let workable_paths: &Vec<GitDirectoryInfo> = &config.workable_paths;
         let mut instance = ConfigManager {
             config: Self::get_config_from_disk(),
         };
