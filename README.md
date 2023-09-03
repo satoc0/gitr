@@ -4,7 +4,7 @@
 
 # gitr
 
-**gitr** is a command-line tool that allows you to execute a command in multiple Git repositories simultaneously in a REPL interface. This tool can be helpful in automating tasks across multiple repositories, such as pulling updates, pushing changes, or running tests.
+**gitr** is a command-line tool that allows you to execute a command in multiple Git repositories simultaneously in a REPL interface. This tool can be helpful in automating tasks across multiple repositories, such as pulling updates and pushing changes.
 
 ## Installation
 
