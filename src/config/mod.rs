@@ -29,7 +29,7 @@ impl ConfigManager<> {
         };
 
         if instance.config.workable_paths.clone().is_empty() {
-            match Self::init_first_config(instance.config.workable_paths.clone()) {
+            match Self::config_workable_repos(instance.config.workable_paths.clone()) {
                 Ok(config) => {
                     instance.config = config;
                 }
@@ -71,7 +71,7 @@ impl ConfigManager<> {
         file.write_all(config_str.as_bytes()).unwrap();
     }
 
-    pub fn init_first_config(workable_paths: Vec<GitDirectoryInfo>) -> Result<Config, &'static str> {
+    pub fn config_workable_repos(workable_paths: Vec<GitDirectoryInfo>) -> Result<Config, &'static str> {
         let mut config = Config {
             workable_paths: vec![],
         };
